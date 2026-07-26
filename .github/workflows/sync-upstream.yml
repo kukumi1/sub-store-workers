@@ -280,5 +280,4 @@ jobs:
           if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "no TG token, skip"; exit 0; fi
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=❌ Sub-Store 自动更新失败 ${{ steps.upstream.outputs.version }}
-查看日志: ${RUN_URL}" > /dev/null
+            --data-urlencode "text=❌ Sub-Store 自动更新失败 ${{ steps.upstream.outputs.version }} — 查看日志: ${RUN_URL}" > /dev/null
