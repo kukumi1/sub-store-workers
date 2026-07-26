@@ -258,3 +258,27 @@ jobs:
           TITLE="Sub-Store%20Sync%20Failed%20${VER}"
           BODY=$(printf '%s' "${RUN_URL}" | sed 's/:/%3A/g; s|/|%2F|g')
           curl -s "https://api.day.app/${BARK_KEY}/${TITLE}/${BODY}"
+
+      - name: Telegram notify success
+        if: steps.check.outputs.needed == 'true' && success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "no TG token, skip"; exit 0; fi
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=✅ Sub-Store 已自动更新到 ${{ steps.upstream.outputs.version }}（Cloudflare Workers）" > /dev/null
+
+      - name: Telegram notify failure
+        if: steps.check.outputs.needed == 'true' && failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then echo "no TG token, skip"; exit 0; fi
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=❌ Sub-Store 自动更新失败 ${{ steps.upstream.outputs.version }}
+查看日志: ${RUN_URL}" > /dev/null
